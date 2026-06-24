@@ -681,7 +681,7 @@ class DashboardController {
         if (loadingScreen) {
             setTimeout(() => {
                 loadingScreen.classList.add('hidden');
-            }, 500);
+            }, 800);
         }
     }
     
