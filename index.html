@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- ====== META TAGS ====== -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+        content="SmartFood Monitor - Sistema de monitoreo IoT para cámaras frigoríficas con ESP32" />
+    <meta name="theme-color" content="#0D9488" />
+
+    <!-- Open Graph para compartir -->
+    <meta property="og:title" content="SmartFood Monitor - Sistema IoT" />
+    <meta property="og:description"
+        content="Monitoreo en tiempo real de temperatura, humedad, gas y estado de puerta" />
+    <meta property="og:type" content="website" />
+
+    <title>SmartFood Monitor - Sistema IoT</title>
+
+    <!-- ====== FAVICON ====== -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❄️</text></svg>" />
+
+    <!-- ====== PRE-CONEXIONES ====== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="preconnect" href="https://www.gstatic.com" />
+    <link rel="preconnect" href="https://smart-monitor-6ec58-default-rtdb.firebaseio.com" />
+
+    <!-- ====== FONTS ====== -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+
+    <!-- ====== FONT AWESOME ====== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- ====== CHART.JS ====== -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+
+    <!-- ====== CSS PERSONALIZADO ====== -->
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+    <!-- ====== SIDEBAR ====== -->
+    <aside class="sidebar" role="navigation" aria-label="Navegación principal">
+        <div class="sidebar-brand">
+            <div class="brand-icon" aria-hidden="true">
+                <i class="fas fa-snowflake"></i>
+            </div>
+            <div class="brand-text">
+                <h2>SmartFood</h2>
+                <span>Monitor IoT</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="active">
+                    <a href="#dashboard" aria-current="page">
+                        <i class="fas fa-th-large" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#sensores">
+                        <i class="fas fa-microchip" aria-hidden="true"></i>
+                        <span>Sensores</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#alertas">
+                        <i class="fas fa-bell" aria-hidden="true"></i>
+                        <span>Alertas</span>
+                        <span class="badge" id="alertBadge" aria-label="Número de alertas">0</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#historico">
+                        <i class="fas fa-history" aria-hidden="true"></i>
+                        <span>Histórico</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#configuracion">
+                        <i class="fas fa-cog" aria-hidden="true"></i>
+                        <span>Configuración</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="status-indicator">
+                <span class="status-dot online" aria-label="Estado del sistema"></span>
+                <span>Sistema Online</span>
+            </div>
+            <p class="version">v2.0.1</p>
+        </div>
+    </aside>
+
+    <!-- ====== MAIN CONTENT ====== -->
+    <main class="main-content" role="main">
+        <!-- Header -->
+        <header class="top-header" role="banner">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+                <h1>Panel de Control</h1>
+            </div>
+
+            <div class="header-right">
+                <div class="datetime" id="datetime" aria-live="polite">
+                    <i class="far fa-calendar-alt" aria-hidden="true"></i>
+                    <span>Cargando...</span>
+                </div>
+                <button class="notification-icon" aria-label="Notificaciones" id="notificationBtn">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    <span class="notification-dot" id="notificationDot" aria-label="Nuevas notificaciones"></span>
+                </button>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=0D9488&color=fff&size=40&rounded=true"
+                        alt="Avatar de usuario" loading="lazy" />
+                </div>
+            </div>
+        </header>
+
+        <!-- ====== DASHBOARD SECTION ====== -->
+        <section id="dashboard" class="content-section active" aria-label="Panel principal">
+            <!-- KPIs -->
+            <div class="kpi-grid" role="group" aria-label="Indicadores clave">
+                <div class="kpi-card">
+                    <div class="kpi-icon temperature" aria-hidden="true">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Temperatura</h3>
+                        <div class="kpi-value">
+                            <span id="tempValue">--</span>
+                            <span class="kpi-unit">°C</span>
+                        </div>
+                        <div class="kpi-status">
+                            <span class="status-label" id="tempStatus">Normal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon humidity" aria-hidden="true">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Humedad</h3>
+                        <div class="kpi-value">
+                            <span id="humidityValue">--</span>
+                            <span class="kpi-unit">%</span>
+                        </div>
+                        <div class="kpi-status">
+                            <span class="status-label" id="humidityStatus">Normal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon gas" aria-hidden="true">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Gas</h3>
+                        <div class="kpi-value">
+                            <span id="gasValue">--</span>
+                            <span class="kpi-unit">ppm</span>
+                        </div>
+                        <div class="kpi-status">
+                            <span class="status-label" id="gasStatus">Normal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon door" aria-hidden="true">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Puerta</h3>
+                        <div class="kpi-value">
+                            <span id="doorValue">Cerrada</span>
+                        </div>
+                        <div class="kpi-status">
+                            <span class="status-label" id="doorStatus">● Cerrada</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="dashboard-grid">
+                <!-- Chamber Visualization -->
+                <article class="chamber-card" aria-label="Visualización de cámara frigorífica">
+                    <div class="card-header">
+                        <h2><i class="fas fa-warehouse" aria-hidden="true"></i> Cámara Frigorífica</h2>
+                        <span class="chamber-status" id="chamberStatus">Operativa</span>
+                    </div>
+
+                    <div class="chamber-visualization">
+                        <div class="chamber-door" id="chamberDoor">
+                            <div class="door-frame">
+                                <div class="door-panel" id="doorPanel" role="img" aria-label="Estado de la puerta">
+                                    <div class="door-handle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chamber-sensors" role="group" aria-label="Lecturas de sensores">
+                            <div class="sensor-reading">
+                                <i class="fas fa-thermometer-half" aria-hidden="true"></i>
+                                <span id="chamberTemp">--°C</span>
+                            </div>
+                            <div class="sensor-reading">
+                                <i class="fas fa-tint" aria-hidden="true"></i>
+                                <span id="chamberHumidity">--%</span>
+                            </div>
+                            <div class="sensor-reading">
+                                <i class="fas fa-fire" aria-hidden="true"></i>
+                                <span id="chamberGas">Normal</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Alerts Panel -->
+                <section class="alerts-card" aria-label="Panel de alertas">
+                    <div class="card-header">
+                        <h2><i class="fas fa-bell" aria-hidden="true"></i> Alertas Recientes</h2>
+                        <button class="clear-btn" id="clearAlerts" aria-label="Limpiar todas las alertas">
+                            <i class="fas fa-check-double" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="alerts-container" id="alertsContainer" role="log" aria-live="polite">
+                        <div class="alert-placeholder">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                            <p>No hay alertas activas</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <section class="chart-card" aria-label="Gráfico de temperatura">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-line" aria-hidden="true"></i> Temperatura</h2>
+                        <div class="chart-controls" role="group" aria-label="Rango de tiempo">
+                            <button class="chart-btn active" data-period="10" aria-pressed="true">10 min</button>
+                            <button class="chart-btn" data-period="30" aria-pressed="false">30 min</button>
+                            <button class="chart-btn" data-period="60" aria-pressed="false">1 h</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="tempChart" aria-label="Gráfico de temperatura en el tiempo"></canvas>
+                    </div>
+                </section>
+
+                <section class="chart-card" aria-label="Gráfico de humedad">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-area" aria-hidden="true"></i> Humedad</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="humidityChart" aria-label="Gráfico de humedad en el tiempo"></canvas>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <!-- ====== OTHER SECTIONS ====== -->
+        <section id="sensores" class="content-section" aria-label="Configuración de sensores">
+            <div class="placeholder-content">
+                <i class="fas fa-microchip" aria-hidden="true"></i>
+                <h2>Configuración de Sensores</h2>
+                <p>Próximamente...</p>
+            </div>
+        </section>
+
+        <section id="alertas" class="content-section" aria-label="Centro de alertas">
+            <div class="placeholder-content">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                <h2>Centro de Alertas</h2>
+                <p>Próximamente...</p>
+            </div>
+        </section>
+
+        <section id="historico" class="content-section" aria-label="Histórico de datos">
+            <div class="placeholder-content">
+                <i class="fas fa-history" aria-hidden="true"></i>
+                <h2>Histórico de Datos</h2>
+                <p>Próximamente...</p>
+            </div>
+        </section>
+
+        <section id="configuracion" class="content-section" aria-label="Configuración del sistema">
+            <div class="placeholder-content">
+                <i class="fas fa-cog" aria-hidden="true"></i>
+                <h2>Configuración del Sistema</h2>
+                <p>Próximamente...</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- ====== LOADING SCREEN ====== -->
+    <div id="loadingScreen" class="loading-screen" aria-hidden="true">
+        <div class="loader">
+            <div class="loader-icon">
+                <i class="fas fa-snowflake"></i>
+            </div>
+            <p>Cargando SmartFood Monitor...</p>
+        </div>
+    </div>
+
+    <!-- ====== SCRIPTS ====== -->
+    <!-- Firebase SDK (cargado de forma síncrona) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- Scripts personalizados -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/alerts.js"></script>
+</body>
+
+</html>
