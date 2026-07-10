@@ -91,7 +91,7 @@ class DashboardController {
             
             // Actualizar datos con validación
             this.data = {
-                temperature: this.validateNumber(data.temperature, -10, 50),
+                temperature: this.validateNumber(data.temperature, -40, 80),
                 humidity: this.validateNumber(data.humidity, 0, 100),
                 gas: this.validateNumber(data.gas, 0, 1000),
                 door: this.validateDoor(data.door),

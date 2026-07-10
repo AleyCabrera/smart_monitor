@@ -18,7 +18,7 @@ class AlertsManager {
         // Sonidos precargados
         Object.values(this.sounds).forEach(sound => {
             sound.load();
-            sound.volume = 0.3;
+            sound.volume = 0.5;
         });
         
         this.init();
@@ -253,8 +253,8 @@ class AlertsManager {
             
             container.innerHTML = displayAlerts.map(alert => `
                 <div class="alert-item ${alert.read ? 'read' : ''}" 
-                     data-id="${alert.id}"
-                     onclick="window.alertsManager && window.alertsManager.toggleRead('${alert.id}')">
+                        data-id="${alert.id}"
+                        onclick="window.alertsManager && window.alertsManager.toggleRead('${alert.id}')">
                     <div class="alert-icon ${alert.type}">
                         <i class="fas ${this.getAlertIcon(alert.type)}"></i>
                     </div>
@@ -266,7 +266,7 @@ class AlertsManager {
                     <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
                         ${!alert.read ? '<span class="badge" style="position:static;">Nuevo</span>' : ''}
                         <span style="font-size:11px;color:var(--gray-400);cursor:pointer;" 
-                              onclick="event.stopPropagation();window.alertsManager && window.alertsManager.deleteAlert('${alert.id}')">
+                                onclick="event.stopPropagation();window.alertsManager && window.alertsManager.deleteAlert('${alert.id}')">
                             <i class="fas fa-times"></i>
                         </span>
                     </div>
@@ -434,7 +434,7 @@ class AlertsManager {
                 return;
             }
             
-            const notification = new Notification('🔔 SmartFood Monitor', {
+            const notification = new Notification('🔔 Smart Monitor', {
                 body: `${this.getTypeLabel(alert.type)} ${alert.title}: ${alert.message}`,
                 icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">❄️</text></svg>',
                 tag: alert.id,
@@ -508,7 +508,7 @@ class AlertsManager {
         const title = document.querySelector('title');
         if (title) {
             if (this.unreadCount > 0) {
-                title.textContent = `(${this.unreadCount}) SmartFood Monitor - Sistema IoT`;
+                title.textContent = `(${this.unreadCount}) Smart Monitor - Sistema IoT`;
             } else {
                 title.textContent = 'SmartFood Monitor - Sistema IoT';
             }
